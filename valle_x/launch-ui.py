@@ -40,9 +40,9 @@ from data.tokenizer import (
 from data.collation import get_text_token_collater
 from models.vallex import VALLE
 from utils.g2p import PhonemeBpeTokenizer
-from descriptions import *
-from macros import *
-from examples import *
+from valle_x.descriptions import *
+from valle_x.macros import *
+from valle_x.examples import *
 
 import gradio as gr
 import whisper
