@@ -33,13 +33,13 @@ import random
 
 import numpy as np
 
-from data.tokenizer import (
+from valle_x.data.tokenizer import (
     AudioTokenizer,
     tokenize_audio,
 )
-from data.collation import get_text_token_collater
-from models.vallex import VALLE
-from utils.g2p import PhonemeBpeTokenizer
+from valle_x.data.collation import get_text_token_collater
+from valle_x.models.vallex import VALLE
+from valle_x.utils.g2p import PhonemeBpeTokenizer
 from valle_x.descriptions import *
 from valle_x.macros import *
 from valle_x.examples import *
@@ -366,7 +366,7 @@ def infer_from_prompt(text, language, accent, preset_prompt, prompt_file):
     return message, (24000, samples.squeeze(0).cpu().numpy())
 
 
-from utils.sentence_cutter import split_text_into_sentences
+from valle_x.utils.sentence_cutter import split_text_into_sentences
 @torch.no_grad()
 def infer_long_text(text, preset_prompt, prompt=None, language='auto', accent='no-accent'):
     """

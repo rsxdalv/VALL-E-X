@@ -7,12 +7,12 @@ import whisper
 langid.set_languages(['en', 'zh', 'ja'])
 
 import numpy as np
-from data.tokenizer import (
+from valle_x.data.tokenizer import (
     AudioTokenizer,
     tokenize_audio,
 )
-from data.collation import get_text_token_collater
-from utils.g2p import PhonemeBpeTokenizer
+from valle_x.data.collation import get_text_token_collater
+from valle_x.utils.g2p import PhonemeBpeTokenizer
 
 from valle_x.macros import *
 

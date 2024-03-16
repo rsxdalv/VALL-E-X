@@ -21,10 +21,10 @@ import torch.nn.functional as F
 # from icefall.utils import make_pad_mask
 # from torchmetrics.classification import BinaryAccuracy
 
-from models.vallex import Transpose
-from modules.embedding import SinePositionalEmbedding, TokenEmbedding
-from modules.scaling import BalancedDoubleSwish, ScaledLinear
-from modules.transformer import (
+from valle_x.models.vallex import Transpose
+from valle_x.modules.embedding import SinePositionalEmbedding, TokenEmbedding
+from valle_x.modules.scaling import BalancedDoubleSwish, ScaledLinear
+from valle_x.modules.transformer import (
     BalancedBasicNorm,
     IdentityNorm,
     TransformerDecoderLayer,

@@ -22,9 +22,9 @@ import torch.nn.functional as F
 # from icefall.utils import make_pad_mask
 # from torchmetrics.classification import MulticlassAccuracy
 
-from data.input_strategies import PromptedFeatures
-from modules.embedding import SinePositionalEmbedding, TokenEmbedding
-from modules.transformer import (
+from valle_x.data.input_strategies import PromptedFeatures
+from valle_x.modules.embedding import SinePositionalEmbedding, TokenEmbedding
+from valle_x.modules.transformer import (
     AdaptiveLayerNorm,
     LayerNorm,
     TransformerDecoderLayer,
