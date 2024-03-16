@@ -1,0 +1,3 @@
+include valle_x/**/*.json
+include valle_x/**/*.npz
+include valle_x/**/*.pickle
