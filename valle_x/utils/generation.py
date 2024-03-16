@@ -35,9 +35,6 @@ if torch.backends.mps.is_available():
     device = torch.device("mps")
 url = 'https://huggingface.co/Plachta/VALL-E-X/resolve/main/vallex-checkpoint.pt'
 
-checkpoints_dir = "./checkpoints/"
-
-model_checkpoint_name = "vallex-checkpoint.pt"
 
 model = None
 
@@ -49,7 +46,7 @@ tokenizer_path = pkg_resources.resource_filename('valle_x', 'utils/g2p/bpe_69.js
 text_tokenizer = PhonemeBpeTokenizer(tokenizer_path=tokenizer_path)
 text_collater = get_text_token_collater()
 
-def preload_models():
+def preload_models(checkpoints_dir="./checkpoints/", model_checkpoint_name="vallex-checkpoint.pt"):
     global model, codec, vocos
     if not os.path.exists(checkpoints_dir): os.mkdir(checkpoints_dir)
     if not os.path.exists(os.path.join(checkpoints_dir, model_checkpoint_name)):
@@ -59,12 +56,12 @@ def preload_models():
                 "Downloading model from https://huggingface.co/Plachta/VALL-E-X/resolve/main/vallex-checkpoint.pt ...")
             # download from https://huggingface.co/Plachta/VALL-E-X/resolve/main/vallex-checkpoint.pt to ./checkpoints/vallex-checkpoint.pt
             wget.download("https://huggingface.co/Plachta/VALL-E-X/resolve/main/vallex-checkpoint.pt",
-                          out="./checkpoints/vallex-checkpoint.pt", bar=wget.bar_adaptive)
+                          out=os.path.join(checkpoints_dir, model_checkpoint_name), bar=wget.bar_adaptive)
         except Exception as e:
             logging.info(e)
             raise Exception(
                 "\n Model weights download failed, please go to 'https://huggingface.co/Plachta/VALL-E-X/resolve/main/vallex-checkpoint.pt'"
-                "\n manually download model weights and put it to {} .".format(os.getcwd() + "\checkpoints"))
+                "\n manually download model weights and put it to {} .".format(os.path.join(os.getcwd(), "checkpoints")))
     # VALL-E
     model = VALLE(
         N_DIM,
