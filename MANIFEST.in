@@ -1,6 +1,1 @@
-include valle_x/**/*.json
-include valle_x/**/*.npz
-include valle_x/**/*.pickle
-include valle_x/**/*.txt
-include valle_x/**/*.wav
-include valle_x/**/*.ogg
+include valle_x/nltk_data/tokenizers/punkt/*.pickle
