@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='VALL-E X',
+    name='valle_x',
     version='0.0.1',
     packages=find_packages(),
     description='Multilingual Text-to-Speech Synthesis and Voice Cloning',
