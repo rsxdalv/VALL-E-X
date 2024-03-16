@@ -8,6 +8,7 @@ import tempfile
 import platform
 import webbrowser
 import sys
+import pkg_resources
 print(f"default encoding is {sys.getdefaultencoding()},file system encoding is {sys.getfilesystemencoding()}")
 print(f"You are using Python version {platform.python_version()}")
 if(sys.version_info[0]<3 or sys.version_info[1]<7):
@@ -59,7 +60,8 @@ torch._C._jit_set_profiling_executor(False)
 torch._C._jit_set_profiling_mode(False)
 torch._C._set_graph_executor_optimize(False)
 
-text_tokenizer = PhonemeBpeTokenizer(tokenizer_path="./utils/g2p/bpe_69.json")
+tokenizer_path = pkg_resources.resource_filename('valle_x', 'utils/g2p/bpe_69.json')
+text_tokenizer = PhonemeBpeTokenizer(tokenizer_path=tokenizer_path)
 text_collater = get_text_token_collater()
 
 device = torch.device("cpu")

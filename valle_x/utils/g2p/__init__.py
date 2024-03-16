@@ -1,4 +1,5 @@
 """ from https://github.com/keithito/tacotron """
+import pkg_resources
 import valle_x.utils.g2p.cleaners
 from valle_x.utils.g2p.symbols import symbols
 from tokenizers import Tokenizer
@@ -7,9 +8,10 @@ from tokenizers import Tokenizer
 _symbol_to_id = {s: i for i, s in enumerate(symbols)}
 _id_to_symbol = {i: s for i, s in enumerate(symbols)}
 
+tokenizer_path = pkg_resources.resource_filename("valle_x", "utils/g2p/bpe_69.json")
 
 class PhonemeBpeTokenizer:
-  def __init__(self, tokenizer_path = "./utils/g2p/bpe_1024.json"):
+  def __init__(self, tokenizer_path = tokenizer_path):
     self.tokenizer = Tokenizer.from_file(tokenizer_path)
 
   def tokenize(self, text):

@@ -4,6 +4,7 @@ import torch
 from vocos import Vocos
 import logging
 import langid
+import pkg_resources
 langid.set_languages(['en', 'zh', 'ja'])
 
 import pathlib
@@ -44,7 +45,8 @@ codec = None
 
 vocos = None
 
-text_tokenizer = PhonemeBpeTokenizer(tokenizer_path="./utils/g2p/bpe_69.json")
+tokenizer_path = pkg_resources.resource_filename('valle_x', 'utils/g2p/bpe_69.json')
+text_tokenizer = PhonemeBpeTokenizer(tokenizer_path=tokenizer_path)
 text_collater = get_text_token_collater()
 
 def preload_models():
@@ -103,9 +105,9 @@ def generate_audio(text, prompt=None, language='auto', accent='no-accent'):
     if prompt is not None:
         prompt_path = prompt
         if not os.path.exists(prompt_path):
-            prompt_path = "./presets/" + prompt + ".npz"
+            prompt_path = pkg_resources.resource_filename('valle_x', f'presets/{prompt}.npz')
         if not os.path.exists(prompt_path):
-            prompt_path = "./customs/" + prompt + ".npz"
+            prompt_path = pkg_resources.resource_filename('valle_x', f'customs/{prompt}.npz')
         if not os.path.exists(prompt_path):
             raise ValueError(f"Cannot find prompt {prompt}")
         prompt_data = np.load(prompt_path)
@@ -170,9 +172,9 @@ def generate_audio_from_long_text(text, prompt=None, language='auto', accent='no
     if prompt is not None and prompt != "":
         prompt_path = prompt
         if not os.path.exists(prompt_path):
-            prompt_path = "./presets/" + prompt + ".npz"
+            prompt_path = pkg_resources.resource_filename('valle_x', f'presets/{prompt}.npz')
         if not os.path.exists(prompt_path):
-            prompt_path = "./customs/" + prompt + ".npz"
+            prompt_path = pkg_resources.resource_filename('valle_x', f'customs/{prompt}.npz')
         if not os.path.exists(prompt_path):
             raise ValueError(f"Cannot find prompt {prompt}")
         prompt_data = np.load(prompt_path)

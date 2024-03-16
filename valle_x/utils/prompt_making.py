@@ -4,6 +4,7 @@ import torchaudio
 import logging
 import langid
 import whisper
+import pkg_resources
 langid.set_languages(['en', 'zh', 'ja'])
 
 import numpy as np
@@ -16,7 +17,8 @@ from valle_x.utils.g2p import PhonemeBpeTokenizer
 
 from valle_x.macros import *
 
-text_tokenizer = PhonemeBpeTokenizer(tokenizer_path="./utils/g2p/bpe_69.json")
+tokenizer_path = pkg_resources.resource_filename("valle_x", "utils/g2p/bpe_69.json")
+text_tokenizer = PhonemeBpeTokenizer(tokenizer_path=tokenizer_path)
 text_collater = get_text_token_collater()
 
 device = torch.device("cpu")
@@ -79,7 +81,7 @@ def make_prompt(name, audio_prompt_path, transcript=None):
     message = f"Detected language: {lang_pr}\n Detected text {text_pr}\n"
 
     # save as npz file
-    save_path = os.path.join("./customs/", f"{name}.npz")
+    save_path = os.path.join(pkg_resources.resource_filename("valle_x", "customs/"), f"{name}.npz")
     np.savez(save_path, audio_tokens=audio_tokens, text_tokens=text_tokens, lang_code=lang2code[lang_pr])
     logging.info(f"Successful. Prompt saved to {save_path}")
 
