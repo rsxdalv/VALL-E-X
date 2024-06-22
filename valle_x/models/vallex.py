@@ -19,6 +19,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import tqdm
 # from icefall.utils import make_pad_mask
 # from torchmetrics.classification import MulticlassAccuracy
 
@@ -525,77 +526,81 @@ class VALLE(VALLF):
         sum_logprobs = torch.zeros(best_of, device=y.device)  # implement batch decoding here
         x = x.repeat(best_of, 1, 1)
         y = y.repeat(best_of, 1)
-        while True:
-            y_emb = self.ar_audio_embedding(y)
-            y_emb = self.ar_audio_prenet(y_emb)
-            y_pos = self.ar_audio_position(y_emb)
-            xy_pos = torch.concat([x, y_pos], dim=1)
+        with tqdm.tqdm(total=x_lens.max().cpu().numpy() * 16) as pbar:
+            while True:
+                y_emb = self.ar_audio_embedding(y)
+                y_emb = self.ar_audio_prenet(y_emb)
+                y_pos = self.ar_audio_position(y_emb)
+                xy_pos = torch.concat([x, y_pos], dim=1)
 
-            y_len = y.shape[1]
-            x_attn_mask_pad = F.pad(
-                x_attn_mask,
-                (0, y_len),
-                value=True,
-            )
-            y_attn_mask = F.pad(
-                torch.triu(
-                    torch.ones(y_len, y_len, dtype=torch.bool), diagonal=1
-                ),
-                (x_len, 0),
-                value=False,
-            )
-            xy_attn_mask = torch.concat(
-                [x_attn_mask_pad, y_attn_mask], dim=0
-            ).to(y.device)
+                y_len = y.shape[1]
+                x_attn_mask_pad = F.pad(
+                    x_attn_mask,
+                    (0, y_len),
+                    value=True,
+                )
+                y_attn_mask = F.pad(
+                    torch.triu(
+                        torch.ones(y_len, y_len, dtype=torch.bool), diagonal=1
+                    ),
+                    (x_len, 0),
+                    value=False,
+                )
+                xy_attn_mask = torch.concat(
+                    [x_attn_mask_pad, y_attn_mask], dim=0
+                ).to(y.device)
 
 
-            if use_kv_caching and kv_cache is not None:
-                xy_pos = xy_pos[:, [-1]]
-            else:
-                pass
-
-            xy_dec, kv_cache = self.ar_decoder.infer(
-                xy_pos,
-                mask=xy_attn_mask,
-                past_kv=kv_cache,
-                use_cache=use_kv_caching,
-            )
-            # xy_dec, _ = self.ar_decoder(
-            #     (xy_pos, None),
-            #     mask=xy_attn_mask,
-            # )
-
-            logits = self.ar_predict_layer(xy_dec[:, -1])
-            samples, current_logprobs = topk_sampling(
-                logits, top_k=top_k, top_p=1, temperature=temperature
-            )
-            sum_logprobs += current_logprobs * (y[:, -1] != NUM_AUDIO_TOKENS)
-            samples[y[:, -1] == NUM_AUDIO_TOKENS] = NUM_AUDIO_TOKENS
-            completed = (samples[:, -1] == NUM_AUDIO_TOKENS).all()
-            if (
-                completed
-                or (y.shape[1] - prompts.shape[1]) > x_lens.max() * 16
-            ):
-                if prompts.shape[1] == y.shape[1]:
-                    raise SyntaxError(
-                        "well trained model shouldn't reach here."
-                    )
-                lengths = torch.sum(y != NUM_AUDIO_TOKENS, dim=1)
-                avg_logprobs = sum_logprobs / lengths ** length_penalty
-                # choose the best beam according to sum_logprobs
-                best_beam = y[torch.argmax(avg_logprobs), :]
-                worst_beam = y[torch.argmin(avg_logprobs), :]
-                # strip all eos tokens
-                best_beam = best_beam[best_beam != NUM_AUDIO_TOKENS]
-                worst_beam = worst_beam[worst_beam != NUM_AUDIO_TOKENS]
-                if return_worst:
-                    y = worst_beam.unsqueeze(0)
+                if use_kv_caching and kv_cache is not None:
+                    xy_pos = xy_pos[:, [-1]]
                 else:
-                    y = best_beam.unsqueeze(0)
-                print(f"VALL-E EOS [{prompts.shape[1]} -> {y.shape[1]}]")
-                break
+                    pass
 
-            y = torch.concat([y, samples], dim=1)
+                xy_dec, kv_cache = self.ar_decoder.infer(
+                    xy_pos,
+                    mask=xy_attn_mask,
+                    past_kv=kv_cache,
+                    use_cache=use_kv_caching,
+                )
+                # xy_dec, _ = self.ar_decoder(
+                #     (xy_pos, None),
+                #     mask=xy_attn_mask,
+                # )
+
+                logits = self.ar_predict_layer(xy_dec[:, -1])
+                samples, current_logprobs = topk_sampling(
+                    logits, top_k=top_k, top_p=1, temperature=temperature
+                )
+                sum_logprobs += current_logprobs * (y[:, -1] != NUM_AUDIO_TOKENS)
+                samples[y[:, -1] == NUM_AUDIO_TOKENS] = NUM_AUDIO_TOKENS
+                completed = (samples[:, -1] == NUM_AUDIO_TOKENS).all()
+                pbar.update(1)
+                if (
+                    completed
+                    or (y.shape[1] - prompts.shape[1]) > x_lens.max() * 16
+                ):
+                    if prompts.shape[1] == y.shape[1]:
+                        raise SyntaxError(
+                            "well trained model shouldn't reach here."
+                        )
+                    lengths = torch.sum(y != NUM_AUDIO_TOKENS, dim=1)
+                    avg_logprobs = sum_logprobs / lengths ** length_penalty
+                    # choose the best beam according to sum_logprobs
+                    best_beam = y[torch.argmax(avg_logprobs), :]
+                    worst_beam = y[torch.argmin(avg_logprobs), :]
+                    # strip all eos tokens
+                    best_beam = best_beam[best_beam != NUM_AUDIO_TOKENS]
+                    worst_beam = worst_beam[worst_beam != NUM_AUDIO_TOKENS]
+                    if return_worst:
+                        y = worst_beam.unsqueeze(0)
+                    else:
+                        y = best_beam.unsqueeze(0)
+                    pbar.total = pbar.n
+                    pbar.close()
+                    print(f"VALL-E EOS [{prompts.shape[1]} -> {y.shape[1]}]")
+                    break
+
+                y = torch.concat([y, samples], dim=1)
 
         codes = [y[:, prefix_len + int(self.ar_audio_prepend_bos) :]]
         if self.num_quantizers == 1:
